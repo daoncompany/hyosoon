@@ -89,12 +89,12 @@
     color: rgba(255,255,255,0.92);
   }
   .header .brandmark img{
-    height: 80px;
+    height: 54px;
     width:auto;
     display:block;
   }
   .header .brandmark .mark{
-    
+    width:26px;height:26px;border-radius:50%;
     background: rgba(255,255,255,0.16);
     display:flex;align-items:center;justify-content:center;
     font-size: 13px;
@@ -346,7 +346,7 @@
   </div>
   <span class="eyebrow">Wellness &amp; Detox Studio</span>
   <h1>몸과 마음의<br>균형을 찾는 시간</h1>
-  <p class="sub">고객카드 작성 &amp; 방문 관리 기록<br>효소온과 함께 오늘도 편안한 하루 되세요</p>
+  <p class="sub">고객카드 작성 &amp; 방문 관리 기록 · 효소온과 함께 오늘도 편안한 하루 되세요</p>
 </div>
 
 <div class="wrap">
@@ -357,8 +357,7 @@
     <div class="card float-card">
       <div class="section-title">이용 안내</div>
       <div class="note-box">정액권 / 회원권의 사용 기한은 10회의 경우 6개월, 그 이상의 경우 1년이며, 이후 자동 소멸됩니다.
-환불은 계약 후 30일 이내 가능하며, 30일 이후는 불가합니다. 
-        사용한 경우 비회원가로 환산하여 환불됩니다.
+환불은 계약 후 30일 이내 가능하며, 30일 이후는 불가합니다. 사용한 경우 비회원가로 환산하여 환불됩니다.
 회원 등록 후 환불은 남은 횟수에 대해서만 환불합니다.
 
 만약 특별 프로모션으로 회원등록한 경우 이미 사용한 횟수는 비회원가를 적용하여 환불합니다.
@@ -513,9 +512,20 @@
 
 <script>
 (function(){
-  var FORM_ACTION = "https://docs.google.com/forms/d/1_Crf4rfOXPBsinCHQR5agGf2JfVkJTGIcmK8d-guEs4/formResponse";
+  // 구글폼 응답 저장은 반드시 공개용(/d/e/{publicId}) 엔드포인트로 보내야 한다.
+  // 편집용(/d/{editId}) 엔드포인트로 보내면 성함/휴대폰 등 공통 질문은 저장되지만
+  // 섹션(재방문여부)에 따라 갈라지는 질문 답변은 서버가 조용히 무시해버린다.
+  var FORM_ACTION = "https://docs.google.com/forms/d/e/1FAIpQLSeUN9GLMIePt50oyxWOdJgvzdF_qLD7LKyBbyKFq7d9wQEGSQ/formResponse";
   var form = document.getElementById('gform');
   form.setAttribute('action', FORM_ACTION);
+
+  // pageHistory: 실제 방문한 섹션 번호 목록. 이게 없으면 위와 같은 이유로
+  // 첫방문 섹션(정액권종류/구매일)이나 재방문 섹션(추가결제/관리내용/비고) 답변이 저장되지 않는다.
+  // 0=공통정보, 1=첫방문(체크리스트+정액권), 2=재방문(관리내용+추가결제+비고)
+  var pageHistoryInput = document.createElement('input');
+  pageHistoryInput.type = 'hidden';
+  pageHistoryInput.name = 'pageHistory';
+  form.appendChild(pageHistoryInput);
 
   var CHECKLIST = [
     { entry: 'entry.999636692', text: '평소 잘 붓고, 아침에 일어나면 몸이 무겁게 느껴진다.' },
@@ -574,14 +584,17 @@
       revisitSection.classList.remove('open');
       setRequiredState(firstSection, true);
       setRequiredState(revisitSection, false);
+      pageHistoryInput.value = '0,1';
     } else if (rvAgain.checked){
       revisitSection.classList.add('open');
       firstSection.classList.remove('open');
       setRequiredState(revisitSection, true);
       setRequiredState(firstSection, false);
+      pageHistoryInput.value = '0,2';
     } else {
       firstSection.classList.remove('open');
       revisitSection.classList.remove('open');
+      pageHistoryInput.value = '0';
       setRequiredState(firstSection, false);
       setRequiredState(revisitSection, false);
     }
