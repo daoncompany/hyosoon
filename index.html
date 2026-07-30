@@ -281,7 +281,9 @@
     background: var(--brown-100);
     border-radius: 14px;
     padding: 4px 16px;
+    border: 1.5px solid transparent;
   }
+  .agree-box.err{ border-color: var(--danger); background:#FBF1EE; }
   .agree-box .agree + .agree{ border-top: 1px solid rgba(74,50,32,0.08); }
 
   .note-box{
@@ -541,15 +543,15 @@
     <div class="card">
       <div class="section-title">건강 상태 체크</div>
       <p class="section-sub">해당하는 사항이 있으면 모두 선택해주세요.</p>
-      <div class="choices grow" id="healthGroup">
-        <label class="pill"><input type="checkbox" name="entry.902119748" value="고혈압·저혈압"><span>고혈압·저혈압</span></label>
-        <label class="pill"><input type="checkbox" name="entry.902119748" value="심장질환"><span>심장질환</span></label>
-        <label class="pill"><input type="checkbox" name="entry.902119748" value="임신 가능성"><span>임신 가능성</span></label>
-        <label class="pill"><input type="checkbox" name="entry.902119748" value="당뇨"><span>당뇨</span></label>
-        <label class="pill"><input type="checkbox" name="entry.902119748" value="수술 및 치료 이력"><span>수술 및 치료 이력</span></label>
-        <label class="pill"><input type="checkbox" name="entry.902119748" value="복용 중인 약"><span>복용 중인 약</span></label>
-        <label class="pill"><input type="checkbox" name="entry.902119748" value="알레르기"><span>알레르기</span></label>
-        <label class="pill"><input type="checkbox" name="entry.902119748" value="해당 없음" id="healthNoneCheckbox"><span>해당 없음</span></label>
+      <div class="agree-box" id="healthGroup">
+        <label class="agree"><input type="checkbox" name="entry.902119748" value="고혈압·저혈압"><span>고혈압·저혈압</span></label>
+        <label class="agree"><input type="checkbox" name="entry.902119748" value="심장질환"><span>심장질환</span></label>
+        <label class="agree"><input type="checkbox" name="entry.902119748" value="임신 가능성"><span>임신 가능성</span></label>
+        <label class="agree"><input type="checkbox" name="entry.902119748" value="당뇨"><span>당뇨</span></label>
+        <label class="agree"><input type="checkbox" name="entry.902119748" value="수술 및 치료 이력"><span>수술 및 치료 이력</span></label>
+        <label class="agree"><input type="checkbox" name="entry.902119748" value="복용 중인 약"><span>복용 중인 약</span></label>
+        <label class="agree"><input type="checkbox" name="entry.902119748" value="알레르기"><span>알레르기</span></label>
+        <label class="agree"><input type="checkbox" name="entry.902119748" value="해당 없음" id="healthNoneCheckbox"><span>해당 없음</span></label>
       </div>
       <div class="field" style="margin-top:16px;">
         <label>기타 특이사항<span class="opt">(선택)</span></label>
