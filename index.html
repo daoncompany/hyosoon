@@ -488,10 +488,7 @@
             <label class="pill"><input type="radio" name="entry.2032403882" value="20회"><span>20회</span></label>
             <label class="pill"><input type="radio" name="entry.2032403882" value="30회"><span>30회</span></label>
           </div>
-        </div>
-        <div class="field">
-          <label>구매일<span class="req">*</span></label>
-          <input type="text" id="f_purchase" inputmode="numeric" pattern="[0-9]*" maxlength="10" placeholder="숫자만 입력 (예: 20260101)" autocomplete="off">
+          <p class="section-sub" style="margin:8px 0 0;">구매일은 등록하시는 오늘 날짜로 자동 저장됩니다.</p>
         </div>
       </div>
     </div>
@@ -770,7 +767,24 @@
     });
   }
   attachDateHidden('f_birth', 'entry.289619300');
-  attachDateHidden('f_purchase', 'entry.146931107');
+
+  // 구매일: 사용자가 직접 입력하지 않고, 정액권 등록 시(제출 시점) 오늘 날짜로 자동 채운다.
+  function setDateHiddenToToday(entryBase){
+    var today = new Date();
+    ['_year','_month','_day'].forEach(function(suffix){
+      var name = entryBase + suffix;
+      var hidden = form.querySelector('input[name="' + name + '"]');
+      if (!hidden){
+        hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = name;
+        form.appendChild(hidden);
+      }
+    });
+    form.querySelector('input[name="' + entryBase + '_year"]').value = today.getFullYear();
+    form.querySelector('input[name="' + entryBase + '_month"]').value = String(today.getMonth() + 1);
+    form.querySelector('input[name="' + entryBase + '_day"]').value = String(today.getDate());
+  }
 
   // 휴대폰: 숫자만 입력해도 010-0000-0000 형태로 자동으로 하이픈을 넣어준다.
   var f_phone = document.getElementById('f_phone');
@@ -817,7 +831,6 @@
 
     if (rvFirst.checked){
       if (!document.querySelector('input[name="entry.2032403882"]:checked')) errors.push(firstSection);
-      if (!isCompleteDate(document.getElementById('f_purchase').value)) errors.push(document.getElementById('f_purchase'));
       var agreeBoxes = firstSection.querySelectorAll('input[name="entry.924576383"]');
       var agreedCount = 0;
       agreeBoxes.forEach(function(b){ if (b.checked) agreedCount++; });
@@ -852,6 +865,11 @@
 
     // 검증 통과 시 Canvas 서명 그림을 Base64 문자열로 변환하여 hidden input에 삽입
     sigHiddenInput.value = signaturePad.toDataURL("image/png");
+
+    // 첫방문(정액권 등록)인 경우 구매일을 오늘 날짜로 자동 채움
+    if (rvFirst.checked){
+      setDateHiddenToToday('entry.146931107');
+    }
 
     errorHint.classList.remove('show');
     submitBtn.disabled = true;
