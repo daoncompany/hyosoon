@@ -81,7 +81,7 @@
   }
   .header > *{ position:relative; z-index:4; }
   .header .top-bar{
-    display:flex; align-items:center; justify-space-between;
+    display:flex; align-items:center; justify-content:space-between;
     max-width: 640px; margin: 0 auto 46px;
   }
   .header .brandmark{
@@ -425,7 +425,7 @@
 
       <div class="field">
         <label>생년월일<span class="req">*</span></label>
-        <input type="date" id="f_birth" placeholder="연도-월-일">
+        <input type="text" id="f_birth" inputmode="numeric" pattern="[0-9]*" maxlength="10" placeholder="숫자만 입력 (예: 19950217)" autocomplete="off">
       </div>
 
       <div class="field">
@@ -489,7 +489,7 @@
         </div>
         <div class="field">
           <label>구매일<span class="req">*</span></label>
-          <input type="date" id="f_purchase">
+          <input type="text" id="f_purchase" inputmode="numeric" pattern="[0-9]*" maxlength="10" placeholder="숫자만 입력 (예: 20260101)" autocomplete="off">
         </div>
       </div>
     </div>
@@ -569,8 +569,8 @@
   var form = document.getElementById('gform');
   form.setAttribute('action', FORM_ACTION);
 
-  // ★★★ 구글폼에 추가해둔 "서명" 단답형/장문형 질문의 entry ID로 교체해주세요 ★★★
-  var SIGNATURE_ENTRY_ID = 'entry.YOUR_SIGNATURE_ENTRY_ID';
+  // 구글폼에 추가한 "서명" 장문형 질문의 entry ID
+  var SIGNATURE_ENTRY_ID = 'entry.541416302';
 
   // 서명 데이터를 전송할 hidden input 생성 및 폼 추가
   var sigHiddenInput = document.createElement('input');
@@ -594,8 +594,10 @@
   });
 
   // 태블릿/모바일 고해상도 대응 캔버스 리사이즈
+  // 구글 시트는 셀 하나에 최대 5만자까지만 저장할 수 있어서, 서명 이미지(base64)가
+  // 그 이상으로 커지지 않도록 배율을 2배로 제한한다(고해상도 기기에서도 용량 폭주 방지).
   function resizeCanvas() {
-    var ratio = Math.max(window.devicePixelRatio || 1, 1);
+    var ratio = Math.min(Math.max(window.devicePixelRatio || 1, 1), 2);
     canvas.width = canvas.offsetWidth * ratio;
     canvas.height = canvas.offsetHeight * ratio;
     canvas.getContext("2d").scale(ratio, ratio);
@@ -690,10 +692,24 @@
   setRequiredState(firstSection, false);
   setRequiredState(revisitSection, false);
 
+  // 생년월일 / 구매일: 숫자만 입력하면 자동으로 "YYYY-MM-DD" 형태로 하이픈을 넣어준다.
+  function formatDateDigits(digits){
+    var formatted = digits;
+    if (digits.length > 4) formatted = digits.slice(0,4) + '-' + digits.slice(4,6);
+    if (digits.length > 6) formatted = digits.slice(0,4) + '-' + digits.slice(4,6) + '-' + digits.slice(6,8);
+    return formatted;
+  }
+  function isCompleteDate(str){
+    return /^\d{4}-\d{2}-\d{2}$/.test(str || '');
+  }
+
   // 생년월일 / 구매일 -> hidden year/month/day 필드로 변환
   function attachDateHidden(dateInputId, entryBase){
     var el = document.getElementById(dateInputId);
-    el.addEventListener('change', function(){
+    el.addEventListener('input', function(){
+      var digits = el.value.replace(/[^0-9]/g, '').slice(0, 8);
+      el.value = formatDateDigits(digits);
+
       ['_year','_month','_day'].forEach(function(suffix){
         var name = entryBase + suffix;
         var hidden = form.querySelector('input[name="' + name + '"]');
@@ -705,7 +721,7 @@
         }
         hidden.value = '';
       });
-      if (el.value){
+      if (isCompleteDate(el.value)){
         var parts = el.value.split('-'); // YYYY-MM-DD
         form.querySelector('input[name="' + entryBase + '_year"]').value = parts[0];
         form.querySelector('input[name="' + entryBase + '_month"]').value = String(Number(parts[1]));
@@ -721,7 +737,7 @@
     var errors = [];
 
     if (!document.getElementById('f_name').value.trim()) errors.push(document.getElementById('f_name'));
-    if (!document.getElementById('f_birth').value) errors.push(document.getElementById('f_birth'));
+    if (!isCompleteDate(document.getElementById('f_birth').value)) errors.push(document.getElementById('f_birth'));
     if (!document.querySelector('input[name="entry.706235477"]:checked')) errors.push(document.getElementById('revisitGroup'));
     if (!document.getElementById('f_privacy').checked) errors.push(document.getElementById('f_privacy'));
 
@@ -732,7 +748,7 @@
 
     if (rvFirst.checked){
       if (!document.querySelector('input[name="entry.2032403882"]:checked')) errors.push(firstSection);
-      if (!document.getElementById('f_purchase').value) errors.push(document.getElementById('f_purchase'));
+      if (!isCompleteDate(document.getElementById('f_purchase').value)) errors.push(document.getElementById('f_purchase'));
       var agreeBoxes = firstSection.querySelectorAll('input[name="entry.924576383"]');
       var agreedCount = 0;
       agreeBoxes.forEach(function(b){ if (b.checked) agreedCount++; });
