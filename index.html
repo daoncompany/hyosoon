@@ -445,7 +445,7 @@
 
       <div class="field">
         <label>휴대폰<span class="opt">(선택)</span></label>
-        <input type="tel" id="f_phone" name="entry.1256998442" placeholder="010-0000-0000" autocomplete="off">
+        <input type="tel" id="f_phone" name="entry.1256998442" placeholder="010-0000-0000" maxlength="13" autocomplete="off">
       </div>
 
       <div class="field">
@@ -788,6 +788,16 @@
   }
   attachDateHidden('f_birth', 'entry.289619300');
   attachDateHidden('f_purchase', 'entry.146931107');
+
+  // 휴대폰: 숫자만 입력해도 010-0000-0000 형태로 자동으로 하이픈을 넣어준다.
+  var f_phone = document.getElementById('f_phone');
+  f_phone.addEventListener('input', function(){
+    var digits = f_phone.value.replace(/[^0-9]/g, '').slice(0, 11);
+    var formatted = digits;
+    if (digits.length > 7) formatted = digits.slice(0,3) + '-' + digits.slice(3,7) + '-' + digits.slice(7);
+    else if (digits.length > 3) formatted = digits.slice(0,3) + '-' + digits.slice(3);
+    f_phone.value = formatted;
+  });
 
   // 건강상태 체크: "해당 없음"과 다른 항목은 동시에 선택되지 않도록 처리
   var healthNoneCheckbox = document.getElementById('healthNoneCheckbox');

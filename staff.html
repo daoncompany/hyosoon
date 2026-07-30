@@ -176,6 +176,19 @@
     });
   }
 
+  // 숫자만 있는 휴대폰번호("01096684629")도 010-0000-0000 형태로 하이픈을 붙여서 보여줌
+  function formatPhone(raw){
+    var digits = String(raw || '').replace(/[^0-9]/g, '');
+    if (!digits) return '';
+    if (digits.length === 11) return digits.slice(0,3) + '-' + digits.slice(3,7) + '-' + digits.slice(7);
+    if (digits.length === 10) {
+      return digits.indexOf('02') === 0
+        ? digits.slice(0,2) + '-' + digits.slice(2,6) + '-' + digits.slice(6)
+        : digits.slice(0,3) + '-' + digits.slice(3,6) + '-' + digits.slice(6);
+    }
+    return digits;
+  }
+
   function renderCard(c){
     var visitsHtml = (c.visits || []).map(function(v){
       return '<tr><td>' + esc(v.date) + '</td><td>' + esc(v.content) + '</td><td>' + esc(v.after) + '</td></tr>';
@@ -187,7 +200,7 @@
     return '' +
       '<div class="result-card">' +
         '<h2>' + esc(c.name) + '</h2>' +
-        '<p class="sub">' + esc(c.phone) + (c.gender ? ' · ' + esc(c.gender) : '') + (c.birth ? ' · ' + esc(c.birth) : '') + '</p>' +
+        '<p class="sub">' + esc(formatPhone(c.phone)) + (c.gender ? ' · ' + esc(c.gender) : '') + (c.birth ? ' · ' + esc(c.birth) : '') + '</p>' +
         '<div class="kv"><b>남은회원권:</b> ' + esc(c.remaining) + '</div>' +
         (c.lastVisitDate ? '<div class="kv"><b>마지막 방문일:</b> ' + esc(c.lastVisitDate) + '</div>' : '') +
         (c.note ? '<div class="kv"><b>비고:</b> ' + esc(c.note) + '</div>' : '') +
