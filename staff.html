@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>효소온 직원 조회</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --brown-900:#3A2B1D; --brown-700:#4A3220; --brown-600:#6B4A2F;
+    --brown-400:#9C7C58; --brown-200:#E8DDD0; --brown-100:#F3EBE1;
+    --cream:#FAF6F0; --white:#FFFFFF; --ink:#3A2B1D; --muted2:#9C8B78;
+    --danger:#B5573C; --ok:#5C7A5E;
+    --shadow: 0 10px 30px rgba(74,50,32,0.08), 0 2px 8px rgba(74,50,32,0.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--cream);
+    font-family:'Noto Sans KR', -apple-system, 'Malgun Gothic', sans-serif;
+    color: var(--ink);
+    min-height:100vh;
+    padding: 24px 18px 60px;
+  }
+  .wrap{ max-width:640px; margin:0 auto; }
+  h1{
+    font-family:'Noto Serif KR', serif; font-weight:700; font-size:22px;
+    color: var(--brown-700); margin: 4px 0 22px;
+  }
+  .card{
+    background: var(--white); border-radius:18px; padding:22px;
+    box-shadow: var(--shadow); margin-bottom:16px;
+    border: 1px solid rgba(74,50,32,0.05);
+  }
+  label{ display:block; font-size:13.5px; font-weight:700; color:var(--brown-700); margin-bottom:8px; }
+  input[type="password"], input[type="text"]{
+    width:100%; border:1.5px solid var(--brown-200); background:var(--cream);
+    border-radius:12px; padding:12px 14px; font-size:15px; font-family:inherit;
+    color:var(--ink); outline:none; transition:border-color .15s, background .15s;
+  }
+  input:focus{ border-color: var(--brown-600); background:#fff; }
+  .btn{
+    width:100%; margin-top:12px; background:var(--brown-600); color:#fff; border:none;
+    border-radius:12px; padding:13px; font-size:14.5px; font-weight:700; font-family:inherit;
+    cursor:pointer;
+  }
+  .btn:active{ transform: translateY(1px); }
+  .row{ display:flex; gap:8px; }
+  .row input{ flex:1; }
+  .row .btn{ width:auto; margin-top:0; padding:0 20px; }
+  .error{ color:var(--danger); font-size:12.5px; margin:10px 0 0; }
+  .hint{ font-size:12px; color:var(--muted2); margin: 8px 0 0; line-height:1.6; }
+
+  .result-card{
+    background:#fff; border-radius:16px; padding:18px 20px; box-shadow:var(--shadow);
+    margin-bottom:14px; border:1px solid rgba(74,50,32,0.05);
+  }
+  .result-card h2{
+    font-family:'Noto Serif KR', serif; font-size:18px; margin:0 0 4px; color:var(--brown-700);
+  }
+  .result-card .sub{ font-size:12.5px; color:var(--muted2); margin:0 0 12px; }
+  .kv{ font-size:13px; margin:5px 0; }
+  .kv b{ color:var(--brown-700); }
+  .health-box{
+    background:var(--brown-100); border-radius:12px; padding:10px 14px;
+    font-size:12.5px; margin:10px 0; line-height:1.6;
+  }
+  table.visits{ width:100%; border-collapse:collapse; margin-top:12px; font-size:12.5px; }
+  table.visits th{
+    background:var(--brown-600); color:#fff; padding:7px 8px; text-align:left; font-weight:700;
+  }
+  table.visits td{ padding:7px 8px; border-bottom:1px solid var(--brown-100); }
+  .empty{ text-align:center; color:var(--muted2); font-size:13px; padding:30px 0; }
+  .loading{ text-align:center; color:var(--muted2); font-size:13px; padding:20px 0; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <h1>효소온 직원 조회</h1>
+
+  <div class="card" id="gateCard">
+    <label>직원 비밀번호</label>
+    <input type="password" id="pwInput" placeholder="비밀번호를 입력해주세요" autocomplete="off">
+    <button class="btn" id="pwSubmit">입장</button>
+    <p class="error" id="gateError"></p>
+  </div>
+
+  <div class="card" id="searchCard" style="display:none;">
+    <label>이름 또는 휴대폰번호로 검색</label>
+    <div class="row">
+      <input type="text" id="searchInput" placeholder="예: 홍길동 또는 01012345678" autocomplete="off">
+      <button class="btn" id="searchBtn">조회</button>
+    </div>
+    <p class="hint">일부만 입력해도 검색됩니다. (예: "010" 또는 "홍" 등)</p>
+  </div>
+
+  <div id="resultsWrap"></div>
+</div>
+
+<script>
+(function(){
+  // Apps Script 웹앱 배포 후 나오는 URL을 여기 붙여넣어야 동작합니다.
+  var WEBAPP_URL = "https://script.google.com/macros/library/d/1FrMu1KLA8sKgPI_fMzrswduYVQtGk0BoCr9hOzg5iOGStxj7XPgFbaKI/1";
+
+  var gateCard = document.getElementById('gateCard');
+  var searchCard = document.getElementById('searchCard');
+  var gateError = document.getElementById('gateError');
+  var resultsWrap = document.getElementById('resultsWrap');
+
+  function showSearchScreen(){
+    gateCard.style.display = 'none';
+    searchCard.style.display = 'block';
+    document.getElementById('searchInput').focus();
+  }
+
+  // 세션 동안만 비밀번호를 기억 (탭을 닫으면 사라짐)
+  if (sessionStorage.getItem('staffKey')) {
+    showSearchScreen();
+  }
+
+  document.getElementById('pwSubmit').addEventListener('click', function(){
+    var pw = document.getElementById('pwInput').value;
+    if (!pw) return;
+    sessionStorage.setItem('staffKey', pw);
+    gateError.textContent = '';
+    showSearchScreen();
+  });
+  document.getElementById('pwInput').addEventListener('keydown', function(e){
+    if (e.key === 'Enter') document.getElementById('pwSubmit').click();
+  });
+
+  document.getElementById('searchBtn').addEventListener('click', doSearch);
+  document.getElementById('searchInput').addEventListener('keydown', function(e){
+    if (e.key === 'Enter') doSearch();
+  });
+
+  function doSearch(){
+    var q = document.getElementById('searchInput').value.trim();
+    if (!q) return;
+    var key = sessionStorage.getItem('staffKey');
+    resultsWrap.innerHTML = '<p class="loading">조회 중...</p>';
+
+    var url = WEBAPP_URL + '?key=' + encodeURIComponent(key) + '&q=' + encodeURIComponent(q);
+    fetch(url).then(function(r){ return r.json(); }).then(function(data){
+      if (!data.ok) {
+        resultsWrap.innerHTML = '';
+        if (String(data.error || '').indexOf('비밀번호') > -1) {
+          sessionStorage.removeItem('staffKey');
+          gateError.textContent = data.error;
+          gateCard.style.display = 'block';
+          searchCard.style.display = 'none';
+        } else {
+          resultsWrap.innerHTML = '<p class="empty">' + data.error + '</p>';
+        }
+        return;
+      }
+      renderResults(data.results);
+    }).catch(function(){
+      resultsWrap.innerHTML = '<p class="empty">조회 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.</p>';
+    });
+  }
+
+  function renderResults(results){
+    if (!results || !results.length){
+      resultsWrap.innerHTML = '<p class="empty">검색 결과가 없습니다.</p>';
+      return;
+    }
+    resultsWrap.innerHTML = results.map(renderCard).join('');
+  }
+
+  function esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c];
+    });
+  }
+
+  function renderCard(c){
+    var visitsHtml = (c.visits || []).map(function(v){
+      return '<tr><td>' + esc(v.date) + '</td><td>' + esc(v.content) + '</td><td>' + esc(v.after) + '</td></tr>';
+    }).join('');
+
+    var healthLine = c.healthCheck ? esc(c.healthCheck) : '해당 없음';
+    if (c.healthOther) healthLine += ' / 기타: ' + esc(c.healthOther);
+
+    return '' +
+      '<div class="result-card">' +
+        '<h2>' + esc(c.name) + '</h2>' +
+        '<p class="sub">' + esc(c.phone) + (c.gender ? ' · ' + esc(c.gender) : '') + (c.birth ? ' · ' + esc(c.birth) : '') + '</p>' +
+        '<div class="kv"><b>남은회원권:</b> ' + esc(c.remaining) + '</div>' +
+        (c.lastVisitDate ? '<div class="kv"><b>마지막 방문일:</b> ' + esc(c.lastVisitDate) + '</div>' : '') +
+        (c.note ? '<div class="kv"><b>비고:</b> ' + esc(c.note) + '</div>' : '') +
+        '<div class="health-box"><b>건강상태:</b> ' + healthLine + '</div>' +
+        (visitsHtml
+          ? '<table class="visits"><thead><tr><th>날짜</th><th>내용</th><th>남은회원권</th></tr></thead><tbody>' + visitsHtml + '</tbody></table>'
+          : '') +
+      '</div>';
+  }
+})();
+</script>
+
+</body>
+</html>

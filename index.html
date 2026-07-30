@@ -256,6 +256,7 @@
     font-weight:700;
   }
   .choices.grow .pill{ flex:1 1 0; min-width: 78px; }
+  .choices.err .pill span{ border-color: var(--danger); background:#FBF1EE; }
 
   /* yes/no row for checklist */
   .yn-item{
@@ -360,6 +361,20 @@
     background: var(--brown-600); color:#fff; border:none; border-radius:12px;
     padding:12px 28px; font-size:14px; font-weight:700; font-family:inherit; cursor:pointer;
   }
+  .btn-pdf{
+    display:block; width:100%; margin-top:10px;
+    background: transparent; color: var(--brown-600);
+    border: 1.5px solid var(--brown-400); border-radius:12px;
+    padding:11px 26px; font-size:13.5px; font-weight:700; font-family:inherit; cursor:pointer;
+  }
+
+  /* PDF 저장(인쇄) 전용 화면 - 평소에는 숨김, 인쇄할 때만 보임 */
+  .print-only{ display:none; }
+  @media print{
+    body *{ visibility:hidden; }
+    .print-only, .print-only *{ visibility:visible; }
+    .print-only{ display:block; position:absolute; top:0; left:0; width:100%; padding:24px; }
+  }
 
   .loading{
     position:fixed; inset:0; background: rgba(58,43,29,0.35);
@@ -416,8 +431,8 @@
       </div>
 
       <div class="field">
-        <label>성별<span class="opt">(선택)</span></label>
-        <div class="choices grow">
+        <label>성별<span class="req">*</span></label>
+        <div class="choices grow" id="genderGroup">
           <label class="pill"><input type="radio" name="entry.1120119511" value="여성"><span>여성</span></label>
           <label class="pill"><input type="radio" name="entry.1120119511" value="남성"><span>남성</span></label>
         </div>
@@ -522,12 +537,50 @@
       </div>
     </div>
 
+    <!-- 건강 상태 체크 (공통: 첫방문/재방문 모두 표시) -->
+    <div class="card">
+      <div class="section-title">건강 상태 체크</div>
+      <p class="section-sub">해당하는 사항이 있으면 모두 선택해주세요.</p>
+      <div class="choices grow" id="healthGroup">
+        <label class="pill"><input type="checkbox" name="entry.902119748" value="고혈압·저혈압"><span>고혈압·저혈압</span></label>
+        <label class="pill"><input type="checkbox" name="entry.902119748" value="심장질환"><span>심장질환</span></label>
+        <label class="pill"><input type="checkbox" name="entry.902119748" value="임신 가능성"><span>임신 가능성</span></label>
+        <label class="pill"><input type="checkbox" name="entry.902119748" value="당뇨"><span>당뇨</span></label>
+        <label class="pill"><input type="checkbox" name="entry.902119748" value="수술 및 치료 이력"><span>수술 및 치료 이력</span></label>
+        <label class="pill"><input type="checkbox" name="entry.902119748" value="복용 중인 약"><span>복용 중인 약</span></label>
+        <label class="pill"><input type="checkbox" name="entry.902119748" value="알레르기"><span>알레르기</span></label>
+        <label class="pill"><input type="checkbox" name="entry.902119748" value="해당 없음" id="healthNoneCheckbox"><span>해당 없음</span></label>
+      </div>
+      <div class="field" style="margin-top:16px;">
+        <label>기타 특이사항<span class="opt">(선택)</span></label>
+        <input type="text" name="entry.2013651269" placeholder="건강상태 관련 특이사항이 있으면 적어주세요" autocomplete="off">
+      </div>
+    </div>
+
+    <!-- 이용 전 주의사항 (공통, 안내용) -->
+    <div class="card">
+      <div class="section-title">이용 전 주의사항</div>
+      <div class="note-box">음주 후에는 이용이 불가합니다.
+컨디션이 좋지 않으시면 반드시 담당 직원에게 미리 알려주세요.
+이용 중 어지럼증, 호흡곤란, 통증이 느껴지면 즉시 이용을 중단해주세요.
+개인의 신체 상태에 따라 체감되는 반응은 다를 수 있습니다.</div>
+    </div>
+
+    <!-- 명현 반응 안내 (공통, 안내용) -->
+    <div class="card">
+      <div class="section-title">명현 반응 안내</div>
+      <div class="note-box">관리 후 일시적으로 졸림, 피로감, 갈증, 어지러움 등 명현 반응이 나타날 수 있습니다.
+이는 일시적인 현상일 수 있으나, 불편감이 지속되거나 심할 경우 이용을 중단하시고 필요 시 의료기관에 상담하시기 바랍니다.</div>
+    </div>
+
     <!-- 개인정보 동의 및 서명 영역 -->
     <div class="card">
       <div class="section-title">개인정보 수집 및 이용 동의</div>
       <p class="section-sub">본인은 위 항목의 기재 내용이 사실이며, 효소온에서 제공하는 서비스를 위한 목적으로 개인정보(성함, 생년월일, 연락처, 건강정보 등)를 수집 이용하는 데 동의합니다.</p>
       <div class="agree-box" style="margin-bottom: 18px;">
         <label class="agree"><input type="checkbox" id="f_privacy" name="entry.1186764624" value="※수집된 정보는 상담, 관리 서비스 제공 외 다른 용도로 사용되지 않습니다."><span>※수집된 정보는 상담, 관리 서비스 제공 외 다른 용도로 사용되지 않습니다.</span></label>
+        <label class="agree"><input type="checkbox" id="f_healthConsent" name="entry.1983906526" value="본인은 위에서 체크한 건강상태 정보를 효소온 관리 서비스 제공 목적으로 수집·이용하는 데 동의합니다."><span>건강정보 수집·이용에 동의합니다.</span></label>
+        <label class="agree"><input type="checkbox" id="f_noticeConsent" name="entry.624341194" value="이용 전 주의사항(음주 후 이용 금지, 컨디션 이상 시 직원에게 알리기, 어지럼증·호흡곤란·통증 시 즉시 중단 등)과 명현반응 안내(관리 후 졸림·피로감·갈증·일시적 어지러움이 있을 수 있음)를 모두 확인하였습니다."><span>이용 전 주의사항 및 명현반응 안내를 확인하였습니다.</span></label>
       </div>
 
       <!-- 서명란 (터치/손가락) -->
@@ -559,8 +612,12 @@
     <h2>제출되었습니다</h2>
     <p>소중한 정보 감사합니다.<br>효소온과 함께해주셔서 감사합니다.</p>
     <button class="btn-close" id="closeSuccessBtn">확인</button>
+    <button class="btn-pdf" id="savePdfBtn">PDF로 저장</button>
   </div>
 </div>
+
+<!-- 인쇄(PDF 저장) 전용 요약 화면. 평소에는 숨겨져 있고, PDF 저장 버튼을 누르면 내용이 채워진 뒤 인쇄됨 -->
+<div class="print-only" id="printSummary"></div>
 
 <script>
 (function(){
@@ -732,14 +789,33 @@
   attachDateHidden('f_birth', 'entry.289619300');
   attachDateHidden('f_purchase', 'entry.146931107');
 
+  // 건강상태 체크: "해당 없음"과 다른 항목은 동시에 선택되지 않도록 처리
+  var healthNoneCheckbox = document.getElementById('healthNoneCheckbox');
+  var healthCheckboxes = document.querySelectorAll('input[name="entry.902119748"]');
+  healthCheckboxes.forEach(function(cb){
+    cb.addEventListener('change', function(){
+      if (cb === healthNoneCheckbox){
+        if (healthNoneCheckbox.checked){
+          healthCheckboxes.forEach(function(other){ if (other !== healthNoneCheckbox) other.checked = false; });
+        }
+      } else if (cb.checked){
+        healthNoneCheckbox.checked = false;
+      }
+    });
+  });
+
   // 필수값 및 서명 유효성 검사
   function validate(){
     var errors = [];
 
     if (!document.getElementById('f_name').value.trim()) errors.push(document.getElementById('f_name'));
+    if (!document.querySelector('input[name="entry.1120119511"]:checked')) errors.push(document.getElementById('genderGroup'));
     if (!isCompleteDate(document.getElementById('f_birth').value)) errors.push(document.getElementById('f_birth'));
     if (!document.querySelector('input[name="entry.706235477"]:checked')) errors.push(document.getElementById('revisitGroup'));
+    if (!document.querySelector('input[name="entry.902119748"]:checked')) errors.push(document.getElementById('healthGroup'));
     if (!document.getElementById('f_privacy').checked) errors.push(document.getElementById('f_privacy'));
+    if (!document.getElementById('f_healthConsent').checked) errors.push(document.getElementById('f_healthConsent'));
+    if (!document.getElementById('f_noticeConsent').checked) errors.push(document.getElementById('f_noticeConsent'));
 
     // 서명 작성 여부 체크
     if (signaturePad.isEmpty()) {
@@ -792,6 +868,58 @@
       loadingOverlay.classList.remove('show');
       successOverlay.classList.add('show');
     }, 1300);
+  });
+
+  // 제출 완료 후 "PDF로 저장" - 입력한 내용 전체를 인쇄 전용 화면에 채운 뒤 브라우저 인쇄(=PDF 저장) 실행
+  function buildPrintSummary(){
+    function row(label, value){
+      return '<tr><td style="padding:7px 12px;background:#F3EBE1;font-weight:700;width:130px;border:1px solid #E8DDD0;">' + label + '</td>' +
+             '<td style="padding:7px 12px;border:1px solid #E8DDD0;">' + (value || '-') + '</td></tr>';
+    }
+    var genderEl = document.querySelector('input[name="entry.1120119511"]:checked');
+    var revisitEl = document.querySelector('input[name="entry.706235477"]:checked');
+    var health = Array.from(document.querySelectorAll('input[name="entry.902119748"]:checked')).map(function(e){ return e.value; });
+    var healthOther = document.querySelector('input[name="entry.2013651269"]').value;
+    var now = new Date();
+    var dateStr = now.getFullYear() + '.' + (now.getMonth() + 1) + '.' + now.getDate();
+    var sigDataUrl = signaturePad.isEmpty() ? '' : signaturePad.toDataURL('image/png');
+
+    var html = '<div style="font-family:\'Noto Sans KR\',sans-serif;color:#3A2B1D;max-width:680px;margin:0 auto;">';
+    html += '<h1 style="font-family:\'Noto Serif KR\',serif;font-size:22px;margin:0 0 4px;">효소온 고객카드</h1>';
+    html += '<p style="font-size:12px;color:#9C8B78;margin:0 0 20px;">작성일: ' + dateStr + '</p>';
+    html += '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;">';
+    html += row('성함', document.getElementById('f_name').value);
+    html += row('성별', genderEl ? genderEl.value : '');
+    html += row('생년월일', document.getElementById('f_birth').value);
+    html += row('휴대폰', document.getElementById('f_phone').value);
+    html += row('재방문여부', revisitEl ? revisitEl.value : '');
+    html += row('건강상태 체크', health.length ? health.join(', ') : '해당 없음');
+    html += row('기타 특이사항', healthOther);
+    html += '</table>';
+
+    html += '<h2 style="font-size:15px;margin:18px 0 8px;">이용 전 주의사항</h2>';
+    html += '<p style="font-size:12px;line-height:1.7;white-space:pre-line;">음주 후에는 이용이 불가합니다.\n컨디션이 좋지 않으시면 반드시 담당 직원에게 미리 알려주세요.\n이용 중 어지럼증, 호흡곤란, 통증이 느껴지면 즉시 이용을 중단해주세요.\n개인의 신체 상태에 따라 체감되는 반응은 다를 수 있습니다.</p>';
+
+    html += '<h2 style="font-size:15px;margin:18px 0 8px;">명현 반응 안내</h2>';
+    html += '<p style="font-size:12px;line-height:1.7;">관리 후 일시적으로 졸림, 피로감, 갈증, 어지러움 등 명현 반응이 나타날 수 있습니다. 불편감이 지속되거나 심할 경우 이용을 중단하시고 필요 시 의료기관에 상담하시기 바랍니다.</p>';
+
+    html += '<h2 style="font-size:15px;margin:18px 0 8px;">동의 확인</h2>';
+    html += '<ul style="font-size:12px;line-height:1.8;padding-left:18px;margin:0;">';
+    html += '<li>개인정보 수집 및 이용 동의: ' + (document.getElementById('f_privacy').checked ? '동의함' : '미동의') + '</li>';
+    html += '<li>건강정보 수집 동의: ' + (document.getElementById('f_healthConsent').checked ? '동의함' : '미동의') + '</li>';
+    html += '<li>이용 전 주의사항 및 명현반응 안내 확인: ' + (document.getElementById('f_noticeConsent').checked ? '확인함' : '미확인') + '</li>';
+    html += '</ul>';
+
+    html += '<h2 style="font-size:15px;margin:18px 0 8px;">고객 서명</h2>';
+    html += sigDataUrl ? '<img src="' + sigDataUrl + '" style="height:80px;border:1px solid #ccc;">' : '<p style="font-size:12px;">-</p>';
+    html += '</div>';
+
+    document.getElementById('printSummary').innerHTML = html;
+  }
+
+  document.getElementById('savePdfBtn').addEventListener('click', function(){
+    buildPrintSummary();
+    window.print();
   });
 
   document.getElementById('closeSuccessBtn').addEventListener('click', function(){
