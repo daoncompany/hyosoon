@@ -73,6 +73,22 @@
   table.visits td{ padding:7px 8px; border-bottom:1px solid var(--brown-100); }
   .empty{ text-align:center; color:var(--muted2); font-size:13px; padding:30px 0; }
   .loading{ text-align:center; color:var(--muted2); font-size:13px; padding:20px 0; }
+
+  .sig-preview{ display:block; max-height:70px; border:1px solid var(--brown-200); border-radius:8px; margin-top:10px; }
+  .btn-pdf{
+    display:block; width:100%; margin-top:14px;
+    background:transparent; color:var(--brown-600);
+    border:1.5px solid var(--brown-400); border-radius:10px;
+    padding:9px; font-size:12.5px; font-weight:700; font-family:inherit; cursor:pointer;
+  }
+
+  /* PDF 저장(인쇄) 전용 화면 - 평소에는 숨김, 인쇄할 때만 보임 */
+  .print-only{ display:none; }
+  @media print{
+    body *{ visibility:hidden; }
+    .print-only, .print-only *{ visibility:visible; }
+    .print-only{ display:block; position:absolute; top:0; left:0; width:100%; padding:24px; }
+  }
 </style>
 </head>
 <body>
@@ -98,6 +114,9 @@
 
   <div id="resultsWrap"></div>
 </div>
+
+<!-- 인쇄(PDF 저장) 전용 화면. 평소에는 숨겨져 있고, PDF 저장 버튼을 누르면 내용이 채워진 뒤 인쇄됨 -->
+<div class="print-only" id="printSummary"></div>
 
 <script>
 (function(){
@@ -162,13 +181,24 @@
     });
   }
 
+  var lastResults = [];
+
   function renderResults(results){
+    lastResults = results || [];
     if (!results || !results.length){
       resultsWrap.innerHTML = '<p class="empty">검색 결과가 없습니다.</p>';
       return;
     }
     resultsWrap.innerHTML = results.map(renderCard).join('');
   }
+
+  resultsWrap.addEventListener('click', function(e){
+    var btn = e.target.closest ? e.target.closest('.btn-pdf') : null;
+    if (!btn) return;
+    var idx = Number(btn.getAttribute('data-idx'));
+    var c = lastResults[idx];
+    if (c) printCustomer(c);
+  });
 
   function esc(s){
     return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){
@@ -189,7 +219,7 @@
     return digits;
   }
 
-  function renderCard(c){
+  function renderCard(c, idx){
     var visitsHtml = (c.visits || []).map(function(v){
       return '<tr><td>' + esc(v.date) + '</td><td>' + esc(v.content) + '</td><td>' + esc(v.after) + '</td></tr>';
     }).join('');
@@ -205,10 +235,72 @@
         (c.lastVisitDate ? '<div class="kv"><b>마지막 방문일:</b> ' + esc(c.lastVisitDate) + '</div>' : '') +
         (c.note ? '<div class="kv"><b>비고:</b> ' + esc(c.note) + '</div>' : '') +
         '<div class="health-box"><b>건강상태:</b> ' + healthLine + '</div>' +
+        (c.signatureUrl ? '<img class="sig-preview" src="' + esc(c.signatureUrl) + '" alt="고객 서명">' : '') +
         (visitsHtml
           ? '<table class="visits"><thead><tr><th>날짜</th><th>내용</th><th>남은회원권</th></tr></thead><tbody>' + visitsHtml + '</tbody></table>'
           : '') +
+        '<button type="button" class="btn-pdf" data-idx="' + idx + '">PDF로 저장</button>' +
       '</div>';
+  }
+
+  // 선택한 고객 정보를 인쇄 전용 화면에 채운 뒤 브라우저 인쇄(=PDF 저장) 실행.
+  // 서명은 구글 드라이브에서 불러오는 이미지라 로드가 끝난 뒤에 인쇄해야 빈 칸으로 찍히지 않는다.
+  function printCustomer(c){
+    function row(label, value){
+      return '<tr><td style="padding:7px 12px;background:#F3EBE1;font-weight:700;width:130px;border:1px solid #E8DDD0;">' + label + '</td>' +
+             '<td style="padding:7px 12px;border:1px solid #E8DDD0;">' + (value || '-') + '</td></tr>';
+    }
+    var visitsRows = (c.visits || []).map(function(v){
+      return '<tr><td style="padding:6px 8px;border:1px solid #E8DDD0;">' + esc(v.date) + '</td>' +
+             '<td style="padding:6px 8px;border:1px solid #E8DDD0;">' + esc(v.content) + '</td>' +
+             '<td style="padding:6px 8px;border:1px solid #E8DDD0;">' + esc(v.after) + '</td></tr>';
+    }).join('');
+
+    var healthLine = c.healthCheck ? esc(c.healthCheck) : '해당 없음';
+    if (c.healthOther) healthLine += ' / 기타: ' + esc(c.healthOther);
+
+    var now = new Date();
+    var dateStr = now.getFullYear() + '.' + (now.getMonth() + 1) + '.' + now.getDate();
+
+    var html = '<div style="font-family:\'Noto Sans KR\',sans-serif;color:#3A2B1D;max-width:680px;margin:0 auto;">';
+    html += '<h1 style="font-family:\'Noto Serif KR\',serif;font-size:22px;margin:0 0 4px;">효소온 고객카드</h1>';
+    html += '<p style="font-size:12px;color:#9C8B78;margin:0 0 20px;">출력일: ' + dateStr + '</p>';
+    html += '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;">';
+    html += row('성함', esc(c.name));
+    html += row('휴대폰', esc(formatPhone(c.phone)));
+    html += row('성별', esc(c.gender));
+    html += row('생년월일', esc(c.birth));
+    html += row('남은회원권', esc(c.remaining));
+    html += row('마지막 방문일', esc(c.lastVisitDate));
+    html += row('건강상태', healthLine);
+    html += row('비고', esc(c.note));
+    html += '</table>';
+
+    if (visitsRows) {
+      html += '<h2 style="font-size:15px;margin:18px 0 8px;">방문 이력</h2>';
+      html += '<table style="width:100%;border-collapse:collapse;font-size:12px;">' +
+              '<thead><tr>' +
+                '<th style="padding:6px 8px;background:#6B4A2F;color:#fff;text-align:left;">날짜</th>' +
+                '<th style="padding:6px 8px;background:#6B4A2F;color:#fff;text-align:left;">내용</th>' +
+                '<th style="padding:6px 8px;background:#6B4A2F;color:#fff;text-align:left;">남은회원권</th>' +
+              '</tr></thead><tbody>' + visitsRows + '</tbody></table>';
+    }
+
+    html += '<h2 style="font-size:15px;margin:18px 0 8px;">고객 서명</h2>';
+    html += c.signatureUrl
+      ? '<img id="printSigImg" src="' + esc(c.signatureUrl) + '" style="height:80px;border:1px solid #ccc;">'
+      : '<p style="font-size:12px;">서명 없음</p>';
+    html += '</div>';
+
+    document.getElementById('printSummary').innerHTML = html;
+
+    var img = document.getElementById('printSigImg');
+    if (img && !img.complete) {
+      img.addEventListener('load', function(){ window.print(); });
+      img.addEventListener('error', function(){ window.print(); });
+    } else {
+      window.print();
+    }
   }
 })();
 </script>
