@@ -227,6 +227,20 @@
     var healthLine = c.healthCheck ? esc(c.healthCheck) : '해당 없음';
     if (c.healthOther) healthLine += ' / 기타: ' + esc(c.healthOther);
 
+    var checklistHtml = (c.checklist && c.checklist.length)
+      ? '<div class="health-box"><b>첫방문 체크리스트:</b>' +
+        '<ul style="margin:6px 0 0;padding:0;list-style:none;">' +
+        c.checklist.map(function(item){
+          var isYes = item.answer === '네';
+          var color = isYes ? 'var(--brown-600)' : 'var(--muted2)';
+          return '<li style="display:flex;justify-content:space-between;gap:10px;padding:3px 0;">' +
+            '<span>' + esc(item.label) + '</span>' +
+            '<b style="color:' + color + ';flex-shrink:0;">' + esc(item.answer || '-') + '</b>' +
+          '</li>';
+        }).join('') +
+        '</ul></div>'
+      : '';
+
     return '' +
       '<div class="result-card">' +
         '<h2>' + esc(c.name) + '</h2>' +
@@ -235,6 +249,7 @@
         (c.lastVisitDate ? '<div class="kv"><b>마지막 방문일:</b> ' + esc(c.lastVisitDate) + '</div>' : '') +
         (c.note ? '<div class="kv"><b>비고:</b> ' + esc(c.note) + '</div>' : '') +
         '<div class="health-box"><b>건강상태:</b> ' + healthLine + '</div>' +
+        checklistHtml +
         (c.signatureUrl ? '<img class="sig-preview" src="' + esc(c.signatureUrl) + '" alt="고객 서명">' : '') +
         (visitsHtml
           ? '<table class="visits"><thead><tr><th>날짜</th><th>내용</th><th>남은회원권</th></tr></thead><tbody>' + visitsHtml + '</tbody></table>'
@@ -275,6 +290,16 @@
     html += row('건강상태', healthLine);
     html += row('비고', esc(c.note));
     html += '</table>';
+
+    if (c.checklist && c.checklist.length) {
+      html += '<h2 style="font-size:15px;margin:18px 0 8px;">첫방문 체크리스트</h2>';
+      html += '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:20px;">' +
+        c.checklist.map(function(item){
+          return '<tr><td style="padding:6px 8px;border:1px solid #E8DDD0;">' + esc(item.label) + '</td>' +
+                 '<td style="padding:6px 8px;border:1px solid #E8DDD0;width:60px;">' + esc(item.answer || '-') + '</td></tr>';
+        }).join('') +
+        '</table>';
+    }
 
     if (visitsRows) {
       html += '<h2 style="font-size:15px;margin:18px 0 8px;">방문 이력</h2>';
