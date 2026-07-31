@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>효소온 고객카드</title>
+<!-- PWA / 앱 아이콘 설정 -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#3A2B1D">
+<link rel="apple-touch-icon" href="img/icons/apple-touch-icon.png">
+<link rel="icon" href="img/icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <!-- Signature Pad CDN 추가 -->
@@ -601,6 +606,11 @@
 
 <script>
 (function(){
+  // PWA(홈 화면에 추가/앱 설치)를 위한 서비스 워커 등록. 실패해도 폼 기능에는 영향 없음.
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  }
+
   // 구글폼 응답 URL
   var FORM_ACTION = "https://docs.google.com/forms/d/e/1FAIpQLSeUN9GLMIePt50oyxWOdJgvzdF_qLD7LKyBbyKFq7d9wQEGSQ/formResponse";
   var form = document.getElementById('gform');
